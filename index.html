@@ -1,403 +1,558 @@
 <!DOCTYPE html>
-<html lang="mr">
+<html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Satara GIS Dashboard</title>
-    
-    <!-- Leaflet CSS -->
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-    <!-- FontAwesome Icons -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
-    <style>
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        }
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SMC GIS Dashboard</title>
 
-        body {
-            display: flex;
-            height: 100vh;
-            overflow: hidden;
-            background-color: #f4f6f9;
-        }
+  <!-- Leaflet CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <!-- Google Font & FontAwesome Icons -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 
-        /* Sidebar Styling */
-        #sidebar {
-            width: 320px;
-            background: #1e293b;
-            color: #fff;
-            display: flex;
-            flex-direction: column;
-            z-index: 1000;
-            box-shadow: 2px 0 10px rgba(0,0,0,0.2);
-        }
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+    }
 
-        .header {
-            padding: 20px;
-            background: #0f172a;
-            border-bottom: 1px solid #334155;
-        }
+    body {
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      background-color: #f8fafc;
+      overflow: hidden;
+    }
 
-        .header h2 {
-            font-size: 1.2rem;
-            color: #38bdf8;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
+    /* 1. TOP NAVBAR */
+    .navbar {
+      height: 60px;
+      background-color: #ffffff;
+      border-bottom: 1px solid #e2e8f0;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 20px;
+      z-index: 1000;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    }
 
-        .header p {
-            font-size: 0.8rem;
-            color: #94a3b8;
-            margin-top: 5px;
-        }
+    .brand-title {
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: #2563eb; /* SMC Blue */
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
 
-        .content {
-            padding: 15px;
-            overflow-y: auto;
-            flex: 1;
-        }
+    .nav-stats {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
 
-        .section-title {
-            font-size: 0.85rem;
-            text-transform: uppercase;
-            color: #94a3b8;
-            margin: 15px 0 8px 0;
-            letter-spacing: 1px;
-        }
+    .stat-pill {
+      background-color: #f1f5f9;
+      color: #475569;
+      padding: 6px 14px;
+      border-radius: 20px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      border: 1px solid #e2e8f0;
+    }
 
-        .layer-group {
-            background: #334155;
-            border-radius: 8px;
-            padding: 10px;
-            margin-bottom: 12px;
-        }
+    .live-system-toggle {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background-color: #f1f5f9;
+      padding: 5px 12px;
+      border-radius: 20px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: #334155;
+    }
 
-        .layer-item {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 8px 0;
-            border-bottom: 1px solid #475569;
-        }
+    /* 2. MAIN LAYOUT CONTAINER */
+    .main-container {
+      display: flex;
+      flex: 1;
+      position: relative;
+      overflow: hidden;
+    }
 
-        .layer-item:last-child {
-            border-bottom: none;
-        }
+    /* 3. LEFT SIDEBAR */
+    .sidebar {
+      width: 280px;
+      background-color: #ffffff;
+      border-right: 1px solid #e2e8f0;
+      display: flex;
+      flex-direction: column;
+      z-index: 900;
+      box-shadow: 2px 0 8px rgba(0,0,0,0.03);
+    }
 
-        .layer-label {
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            font-size: 0.9rem;
-            cursor: pointer;
-        }
+    .sidebar-header {
+      padding: 16px 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid #f1f5f9;
+    }
 
-        .color-box {
-            width: 14px;
-            height: 14px;
-            border-radius: 3px;
-            display: inline-block;
-        }
+    .sidebar-header h3 {
+      font-size: 0.8rem;
+      font-weight: 800;
+      color: #334155;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+    }
 
-        /* Statistics Cards */
-        .stats-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 10px;
-            margin-bottom: 15px;
-        }
+    .sidebar-header span {
+      font-size: 0.8rem;
+      color: #2563eb;
+      font-weight: 600;
+    }
 
-        .stat-card {
-            background: #334155;
-            padding: 12px;
-            border-radius: 8px;
-            text-align: center;
-        }
+    .sidebar-content {
+      padding: 16px 20px;
+      overflow-y: auto;
+      flex: 1;
+    }
 
-        .stat-card h3 {
-            font-size: 1.1rem;
-            color: #38bdf8;
-        }
+    .section-label {
+      font-size: 0.75rem;
+      font-weight: 700;
+      color: #2563eb;
+      text-transform: uppercase;
+      margin-top: 15px;
+      margin-bottom: 12px;
+      letter-spacing: 0.5px;
+    }
 
-        .stat-card p {
-            font-size: 0.75rem;
-            color: #cbd5e1;
-        }
+    .section-label:first-child {
+      margin-top: 0;
+    }
 
-        /* Search Box */
-        .search-box {
-            position: relative;
-            margin-bottom: 15px;
-        }
+    /* Layer Items & Custom Toggle Switch */
+    .layer-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 14px;
+    }
 
-        .search-box input {
-            width: 100%;
-            padding: 10px 35px 10px 12px;
-            border-radius: 6px;
-            border: 1px solid #475569;
-            background: #0f172a;
-            color: #fff;
-            font-size: 0.9rem;
-        }
+    .layer-info {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 0.9rem;
+      color: #334155;
+      font-weight: 500;
+    }
 
-        .search-box i {
-            position: absolute;
-            right: 12px;
-            top: 50%;
-            transform: translateY(-50%);
-            color: #94a3b8;
-        }
+    /* Layer Legend Symbols */
+    .legend-icon {
+      width: 14px;
+      height: 14px;
+      border-radius: 3px;
+      display: inline-block;
+      flex-shrink: 0;
+    }
 
-        /* Map Container */
-        #map {
-            flex: 1;
-            height: 100vh;
-        }
+    .icon-rect-pink { background-color: #ec4899; }
+    .icon-rect-green { background-color: #22c55e; }
+    .icon-circle-brown { background-color: #a16207; border-radius: 50%; width: 12px; height: 12px; }
+    .icon-circle-pink { background-color: #ec4899; border-radius: 50%; width: 12px; height: 12px; }
+    .icon-circle-orange { background-color: #f97316; border-radius: 50%; width: 12px; height: 12px; }
+    .icon-line-dark { background-color: #334155; height: 3px; width: 16px; }
+    .icon-circle-green { background-color: #22c55e; border-radius: 50%; width: 12px; height: 12px; }
 
-        /* Toggle Checkbox Switch */
-        input[type="checkbox"] {
-            accent-color: #38bdf8;
-            width: 16px;
-            height: 16px;
-            cursor: pointer;
-        }
-    </style>
+    /* Custom Toggle Switch UI */
+    .switch {
+      position: relative;
+      display: inline-block;
+      width: 38px;
+      height: 20px;
+    }
+
+    .switch input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+
+    .slider {
+      position: absolute;
+      cursor: pointer;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background-color: #cbd5e1;
+      transition: .2s;
+      border-radius: 20px;
+    }
+
+    .slider:before {
+      position: absolute;
+      content: "";
+      height: 14px;
+      width: 14px;
+      left: 3px;
+      bottom: 3px;
+      background-color: white;
+      transition: .2s;
+      border-radius: 50%;
+    }
+
+    input:checked + .slider {
+      background-color: #2563eb;
+    }
+
+    input:checked + .slider:before {
+      transform: translateX(18px);
+    }
+
+    /* 4. MAP CONTAINER */
+    #map {
+      flex: 1;
+      height: 100%;
+      z-index: 1;
+    }
+
+    /* Leaflet Popup Custom Styling */
+    .leaflet-popup-content-wrapper {
+      border-radius: 8px;
+      padding: 0;
+      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+      overflow: hidden;
+    }
+
+    .leaflet-popup-content {
+      margin: 0;
+      width: 240px !important;
+    }
+
+    .popup-box {
+      font-size: 0.85rem;
+    }
+
+    .popup-badge {
+      background-color: #e0f2fe;
+      color: #0284c7;
+      font-size: 0.65rem;
+      font-weight: 800;
+      padding: 2px 6px;
+      border-radius: 4px;
+      display: inline-block;
+      margin: 12px 12px 4px 12px;
+      text-transform: uppercase;
+    }
+
+    .popup-title {
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: #0f172a;
+      padding: 0 12px 8px 12px;
+      border-bottom: 1px solid #f1f5f9;
+    }
+
+    .popup-table {
+      width: 100%;
+      border-collapse: collapse;
+      padding: 8px 12px;
+    }
+
+    .popup-table tr td {
+      padding: 6px 12px;
+      color: #475569;
+    }
+
+    .popup-table tr td:last-child {
+      text-align: right;
+      font-weight: 600;
+      color: #0f172a;
+    }
+  </style>
 </head>
 <body>
 
-    <!-- Sidebar Container -->
-    <div id="sidebar">
-        <div class="header">
-            <h2><i class="fa-solid fa-map-location-dot"></i> Satara GIS Portal</h2>
-            <p>Satara District Interactive Dashboard</p>
-        </div>
-
-        <div class="content">
-            <!-- Search Bar -->
-            <div class="search-box">
-                <input type="text" id="searchInput" placeholder="Search Taluka / Location...">
-                <i class="fa-solid fa-magnifying-glass"></i>
-            </div>
-
-            <!-- Dashboard Quick Stats -->
-            <div class="section-title">Overview</div>
-            <div class="stats-grid">
-                <div class="stat-card">
-                    <h3 id="area-stat">10,480</h3>
-                    <p>Total Area (sq km)</p>
-                </div>
-                <div class="stat-card">
-                    <h3 id="taluka-stat">11</h3>
-                    <p>Talukas Covered</p>
-                </div>
-            </div>
-
-            <!-- GIS Layers Selection -->
-            <div class="section-title">GIS Layers</div>
-            <div class="layer-group">
-                <div class="layer-item">
-                    <label class="layer-label">
-                        <input type="checkbox" id="layer-road" checked onchange="toggleLayer('road')">
-                        <span class="color-box" style="background: #ef4444;"></span>
-                        Road Network
-                    </label>
-                </div>
-                <div class="layer-item">
-                    <label class="layer-label">
-                        <input type="checkbox" id="layer-railway" checked onchange="toggleLayer('railway')">
-                        <span class="color-box" style="background: #eab308;"></span>
-                        Railway Lines
-                    </label>
-                </div>
-                <div class="layer-item">
-                    <label class="layer-label">
-                        <input type="checkbox" id="layer-water" checked onchange="toggleLayer('water')">
-                        <span class="color-box" style="background: #06b6d4;"></span>
-                        Water Bodies
-                    </label>
-                </div>
-                <div class="layer-item">
-                    <label class="layer-label">
-                        <input type="checkbox" id="layer-building" checked onchange="toggleLayer('building')">
-                        <span class="color-box" style="background: #a855f7;"></span>
-                        Buildings / Urban
-                    </label>
-                </div>
-                <div class="layer-item">
-                    <label class="layer-label">
-                        <input type="checkbox" id="layer-landuse" checked onchange="toggleLayer('landuse')">
-                        <span class="color-box" style="background: #22c55e;"></span>
-                        Land Use
-                    </label>
-                </div>
-                <div class="layer-item">
-                    <label class="layer-label">
-                        <input type="checkbox" id="layer-boundary" checked onchange="toggleLayer('boundary')">
-                        <span class="color-box" style="background: #f97316;"></span>
-                        Satara Boundary (satara_b)
-                    </label>
-                </div>
-            </div>
-
-            <!-- Basemap Selector -->
-            <div class="section-title">Base Maps</div>
-            <div class="layer-group">
-                <div class="layer-item">
-                    <label class="layer-label">
-                        <input type="radio" name="basemap" value="satellite" checked onclick="changeBasemap('satellite')">
-                        Google Satellite
-                    </label>
-                </div>
-                <div class="layer-item">
-                    <label class="layer-label">
-                        <input type="radio" name="basemap" value="terrain" onclick="changeBasemap('terrain')">
-                        Google Terrain
-                    </label>
-                </div>
-                <div class="layer-item">
-                    <label class="layer-label">
-                        <input type="radio" name="basemap" value="osm" onclick="changeBasemap('osm')">
-                        OpenStreetMap
-                    </label>
-                </div>
-            </div>
-        </div>
+  <!-- TOP NAVBAR -->
+  <header class="navbar">
+    <div class="brand-title">
+      SMC GIS Dashboard
     </div>
+    <div class="nav-stats">
+      <div class="stat-pill">26 Wards</div>
+      <div class="stat-pill">39 Health Units</div>
+      <div class="stat-pill">17 Emergency</div>
+      <div class="live-system-toggle">
+        <span>Live System</span>
+        <label class="switch">
+          <input type="checkbox" checked>
+          <span class="slider"></span>
+        </label>
+      </div>
+    </div>
+  </header>
 
-    <!-- Map Container -->
+  <!-- MAIN CONTAINER -->
+  <div class="main-container">
+    
+    <!-- LEFT SIDEBAR -->
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <h3>LAYER CATALOG</h3>
+        <span>Layers</span>
+      </div>
+
+      <div class="sidebar-content">
+        
+        <!-- BASE MAPS SECTION -->
+        <div class="section-label">BASE MAPS</div>
+        
+        <div class="layer-item">
+          <span class="layer-info">Google Satellite</span>
+          <label class="switch">
+            <input type="radio" name="basemap" id="radio-sat" checked onchange="switchBasemap('sat')">
+            <span class="slider"></span>
+          </label>
+        </div>
+
+        <div class="layer-item">
+          <span class="layer-info">Google Terrain</span>
+          <label class="switch">
+            <input type="radio" name="basemap" id="radio-terrain" onchange="switchBasemap('terrain')">
+            <span class="slider"></span>
+          </label>
+        </div>
+
+        <!-- MAP LAYERS SECTION -->
+        <div class="section-label">MAP LAYERS</div>
+
+        <div class="layer-item">
+          <div class="layer-info">
+            <span class="legend-icon icon-rect-pink"></span>
+            Buildings
+          </div>
+          <label class="switch">
+            <input type="checkbox" id="chk-buildings" checked onchange="toggleGISLayer('buildings')">
+            <span class="slider"></span>
+          </label>
+        </div>
+
+        <div class="layer-item">
+          <div class="layer-info">
+            <span class="legend-icon icon-rect-green"></span>
+            Landuse
+          </div>
+          <label class="switch">
+            <input type="checkbox" id="chk-landuse" checked onchange="toggleGISLayer('landuse')">
+            <span class="slider"></span>
+          </label>
+        </div>
+
+        <div class="layer-item">
+          <div class="layer-info">
+            <span class="legend-icon icon-circle-brown"></span>
+            Places
+          </div>
+          <label class="switch">
+            <input type="checkbox" id="chk-places" checked onchange="toggleGISLayer('places')">
+            <span class="slider"></span>
+          </label>
+        </div>
+
+        <div class="layer-item">
+          <div class="layer-info">
+            <span class="legend-icon icon-circle-pink"></span>
+            pois
+          </div>
+          <label class="switch">
+            <input type="checkbox" id="chk-pois" checked onchange="toggleGISLayer('pois')">
+            <span class="slider"></span>
+          </label>
+        </div>
+
+        <div class="layer-item">
+          <div class="layer-info">
+            <span class="legend-icon icon-circle-orange"></span>
+            Pois_1
+          </div>
+          <label class="switch">
+            <input type="checkbox" id="chk-pois1" checked onchange="toggleGISLayer('pois1')">
+            <span class="slider"></span>
+          </label>
+        </div>
+
+        <div class="layer-item">
+          <div class="layer-info">
+            <span class="legend-icon icon-line-dark"></span>
+            Railways
+          </div>
+          <label class="switch">
+            <input type="checkbox" id="chk-railways" checked onchange="toggleGISLayer('railways')">
+            <span class="slider"></span>
+          </label>
+        </div>
+
+        <div class="layer-item">
+          <div class="layer-info">
+            <span class="legend-icon icon-line-dark" style="background:#64748b;"></span>
+            Roads
+          </div>
+          <label class="switch">
+            <input type="checkbox" id="chk-roads" checked onchange="toggleGISLayer('roads')">
+            <span class="slider"></span>
+          </label>
+        </div>
+
+        <div class="layer-item">
+          <div class="layer-info">
+            <span class="legend-icon icon-circle-green"></span>
+            Trafic
+          </div>
+          <label class="switch">
+            <input type="checkbox" id="chk-traffic" checked onchange="toggleGISLayer('traffic')">
+            <span class="slider"></span>
+          </label>
+        </div>
+
+      </div>
+    </aside>
+
+    <!-- MAP CONTAINER -->
     <div id="map"></div>
 
-    <!-- Leaflet JS -->
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    <script>
-        // 1. Initialize Map centered on Satara, Maharashtra
-        const sataraCoords = [17.6805, 74.0183];
-        const map = L.map('map', {
-            center: sataraCoords,
-            zoom: 10,
-            zoomControl: false
-        });
+  </div>
 
-        // Add Zoom Control to Top Right
-        L.control.zoom({ position: 'topright' }).addTo(map);
+  <!-- Leaflet JS Library -->
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
 
-        // 2. Define Base Layers
-        const basemaps = {
-            satellite: L.tileLayer('https://mt1.google.com/vt/lyrs=s&x={x}&y={y}&z={z}', {
-                attribution: '&copy; Google Maps'
-            }),
-            terrain: L.tileLayer('https://mt1.google.com/vt/lyrs=p&x={x}&y={y}&z={z}', {
-                attribution: '&copy; Google Maps'
-            }),
-            osm: L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                attribution: '&copy; OpenStreetMap contributors'
-            })
-        };
+  <script>
+    // 1. Sangola (SMC Area) Center Coordinates
+    const sangolaCoords = [17.4332, 75.1978];
 
-        // Set Default Basemap
-        let activeBasemap = basemaps.satellite.addTo(map);
+    // 2. Map Initialization
+    const map = L.map('map', {
+      center: sangolaCoords,
+      zoom: 13,
+      zoomControl: true
+    });
 
-        function changeBasemap(type) {
-            map.removeLayer(activeBasemap);
-            activeBasemap = basemaps[type];
-            activeBasemap.addTo(map);
+    // 3. Basemaps Configuration
+    const basemaps = {
+      sat: L.tileLayer('https://mt1.google.com/vt/lyrs=s&x={x}&y={y}&z={z}', {
+        maxZoom: 20,
+        attribution: '&copy; Google Satellite'
+      }),
+      terrain: L.tileLayer('https://mt1.google.com/vt/lyrs=p&x={x}&y={y}&z={z}', {
+        maxZoom: 20,
+        attribution: '&copy; Google Terrain'
+      })
+    };
+
+    let activeBasemap = basemaps.sat.addTo(map);
+
+    function switchBasemap(type) {
+      map.removeLayer(activeBasemap);
+      activeBasemap = basemaps[type];
+      activeBasemap.addTo(map);
+    }
+
+    // 4. GIS Layers Store
+    const layers = {};
+
+    // Building Polygon Layer (Sangola Boundary Polygon from Image)
+    layers['buildings'] = L.polygon([
+      [17.442, 75.185], [17.445, 75.210], [17.428, 75.215], 
+      [17.420, 75.205], [17.422, 75.180]
+    ], {
+      color: '#ec4899',
+      fillColor: '#ec4899',
+      fillOpacity: 0.65,
+      weight: 1.5
+    }).addTo(map);
+
+    // Traffic Feature Point (Interactive Popup matching Screenshot)
+    const trafficPointCoords = [17.438, 75.201];
+    
+    // Circle Marker for Traffic Feature
+    layers['traffic'] = L.circleMarker(trafficPointCoords, {
+      radius: 7,
+      color: '#ffffff',
+      fillColor: '#22c55e',
+      fillOpacity: 1,
+      weight: 2
+    }).addTo(map);
+
+    // Popup Content (Exact replica of Image)
+    const popupContent = `
+      <div class="popup-box">
+        <div class="popup-badge">TRAFFIC • SMC ZONE</div>
+        <div class="popup-title">Traffic Feature</div>
+        <table class="popup-table">
+          <tr>
+            <td>osm_id</td>
+            <td>14183081995</td>
+          </tr>
+          <tr>
+            <td>code</td>
+            <td>5236</td>
+          </tr>
+          <tr>
+            <td>fclass</td>
+            <td>railway_crossing</td>
+          </tr>
+        </table>
+      </div>
+    `;
+
+    // Bind and Automatically Open Popup like Image
+    layers['traffic'].bindPopup(popupContent).openPopup();
+
+    // Additional Random Points for POIs
+    layers['pois'] = L.layerGroup([
+      L.circleMarker([17.430, 75.195], { radius: 5, fillColor: '#ec4899', color: '#fff', fillOpacity: 0.9 }),
+      L.circleMarker([17.435, 75.208], { radius: 5, fillColor: '#ec4899', color: '#fff', fillOpacity: 0.9 }),
+      L.circleMarker([17.425, 75.200], { radius: 5, fillColor: '#ec4899', color: '#fff', fillOpacity: 0.9 })
+    ]).addTo(map);
+
+    layers['pois1'] = L.layerGroup([
+      L.circleMarker([17.439, 75.190], { radius: 5, fillColor: '#f97316', color: '#fff', fillOpacity: 0.9 }),
+      L.circleMarker([17.441, 75.204], { radius: 5, fillColor: '#f97316', color: '#fff', fillOpacity: 0.9 })
+    ]).addTo(map);
+
+    // Railways Line
+    layers['railways'] = L.polyline([
+      [17.415, 75.170], [17.438, 75.201], [17.450, 75.220]
+    ], {
+      color: '#1e293b',
+      weight: 3,
+      dashArray: '6, 6'
+    }).addTo(map);
+
+    // Roads Line
+    layers['roads'] = L.polyline([
+      [17.420, 75.180], [17.433, 75.198], [17.440, 75.215]
+    ], {
+      color: '#64748b',
+      weight: 3
+    }).addTo(map);
+
+    // Toggle Layer Handler
+    function toggleGISLayer(layerKey) {
+      const checkbox = document.getElementById(`chk-${layerKey}`);
+      if (checkbox && layers[layerKey]) {
+        if (checkbox.checked) {
+          map.addLayer(layers[layerKey]);
+        } else {
+          map.removeLayer(layers[layerKey]);
         }
-
-        // 3. Define Vector Overlay Layers (Sample GIS Data)
-        const layers = {};
-
-        // Satara Boundary (satara_b)
-        layers['boundary'] = L.polygon([
-            [17.95, 73.65], [18.10, 74.20], [17.80, 74.55], 
-            [17.35, 74.30], [17.40, 73.75]
-        ], {
-            color: '#f97316',
-            weight: 3,
-            fillOpacity: 0.15,
-            dashArray: '5, 5'
-        }).bindPopup("<b>Satara District Boundary</b>");
-
-        // Road Layer
-        layers['road'] = L.polyline([
-            [[17.68, 74.01], [17.85, 74.15], [18.00, 74.20]], // NH 48 North
-            [[17.68, 74.01], [17.40, 74.10]],                 // NH 48 South
-            [[17.68, 74.01], [17.91, 73.66]]                  // Towards Mahabaleshwar
-        ], {
-            color: '#ef4444',
-            weight: 4
-        }).bindPopup("<b>Major Highway Network</b>");
-
-        // Railway Layer
-        layers['railway'] = L.polyline([
-            [[17.68, 74.01], [17.72, 74.20], [17.80, 74.35]]
-        ], {
-            color: '#eab308',
-            weight: 3,
-            dashArray: '8, 8'
-        }).bindPopup("<b>Railway Track</b>");
-
-        // Water Bodies Layer (Koyna / Krishna river representation)
-        layers['water'] = L.polygon([
-            [17.40, 73.70], [17.50, 73.75], [17.60, 73.72], [17.55, 73.65]
-        ], {
-            color: '#06b6d4',
-            fillColor: '#06b6d4',
-            fillOpacity: 0.6
-        }).bindPopup("<b>Koyna Reservoir / Water Body</b>");
-
-        // Land Use Layer
-        layers['landuse'] = L.polygon([
-            [17.80, 73.80], [17.92, 73.70], [17.88, 73.85]
-        ], {
-            color: '#22c55e',
-            fillColor: '#22c55e',
-            fillOpacity: 0.4
-        }).bindPopup("<b>Forest / Agricultural Land Use</b>");
-
-        // Buildings Layer
-        layers['building'] = L.polygon([
-            [17.685, 74.012], [17.690, 74.018], [17.680, 74.025]
-        ], {
-            color: '#a855f7',
-            fillColor: '#a855f7',
-            fillOpacity: 0.7
-        }).bindPopup("<b>Satara Urban Settlement</b>");
-
-        // Add All Layers to Map Initially
-        Object.keys(layers).forEach(key => {
-            layers[key].addTo(map);
-        });
-
-        // Toggle Layer Visibility
-        function toggleLayer(layerName) {
-            const isChecked = document.getElementById(`layer-${layerName}`).checked;
-            if (isChecked) {
-                map.addLayer(layers[layerName]);
-            } else {
-                map.removeLayer(layers[layerName]);
-            }
-        }
-
-        // Search Location Functionality
-        document.getElementById('searchInput').addEventListener('keypress', function (e) {
-            if (e.key === 'Enter') {
-                const query = this.value.toLowerCase();
-                if (query.includes('mahabaleshwar')) {
-                    map.flyTo([17.9237, 73.6586], 12);
-                } else if (query.includes('karad')) {
-                    map.flyTo([17.2882, 74.1842], 12);
-                } else if (query.includes('wai')) {
-                    map.flyTo([17.9482, 73.8943], 12);
-                } else {
-                    map.flyTo(sataraCoords, 11);
-                }
-            }
-        });
-    </script>
+      }
+    }
+  </script>
 </body>
 </html>
